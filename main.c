@@ -18,16 +18,15 @@ struct d_info {
 	struct dirent* l;
 };
 
-void printfile(const char *p, const char *f); // file path
+void printfile(const char *__restrict__ p, const char *__restrict__ f); // file path
 
-int rdir(const char *p, struct d_info* info);
+int rdir(const char *__restrict__ p, struct d_info *__restrict__ info);
 
 void print(struct d_info *info, const char *p, unsigned int opt);
 
 int main(int argc, char* argv[]) {
 	struct d_info info = {0};
 	const char *here = ".";
-	const char *path = ".";
 	unsigned int opt = 0;
 	int arg;
 
@@ -37,6 +36,11 @@ int main(int argc, char* argv[]) {
 			case 'a': opt |= ALL; break;
 			case '?': fprintf(stderr, "Unknown option\n"); break;
 		}
+	}
+
+	if (argc - optind == 0) {
+		rdir(here, &info);
+		print(&info, here, opt);
 	}
 
 	for (int i = optind; i < argc; i++) {
@@ -56,12 +60,12 @@ int main(int argc, char* argv[]) {
 			printf("%s:\n", argv[i]);
 		}
 
-		print(&info, path, opt);
+		print(&info, argv[i], opt);
 	}
 
 }
 
-int rdir(const char *p, struct d_info* info) {
+int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 	DIR* dir = opendir(p);
 	struct dirent* entry;
 	int rv = 0;
@@ -94,7 +98,7 @@ int rdir(const char *p, struct d_info* info) {
 	return rv;
 }
 
-void print(struct d_info *info, const char *p, unsigned int opt) {
+void print(struct d_info *__restrict__ info, const char *__restrict__ p, unsigned int opt) {
 	for (int i = 0; i < info->num; i++) {
 		if (!(opt & ALL) && info->l[i].d_name[0] == '.') continue;
 		if (opt & LONG) printfile(p, info->l[i].d_name);
@@ -104,7 +108,7 @@ void print(struct d_info *info, const char *p, unsigned int opt) {
 	if (!(opt & LONG)) putchar('\n');
 }
 
-void printfile(const char *p, const char *f) { // p is parent and f is file
+void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is parent and f is file
 	char fpath[100] = {0};
 	struct stat l_opt;
 	char perm[20] = {0};
