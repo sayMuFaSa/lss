@@ -1,4 +1,4 @@
 all:
-	cc -o ls main.c
+	cc -O1 -o ls main.c
 clean:
 	rm ls

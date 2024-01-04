@@ -22,7 +22,24 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f); // file 
 
 int rdir(const char *__restrict__ p, struct d_info *__restrict__ info);
 
-void print(struct d_info *info, const char *p, unsigned int opt);
+void print(struct d_info *__restrict__ info, const char *__restrict__ p, unsigned int opt);
+
+int case_in (const void* a, const void* b) {
+	struct dirent* ad = (struct dirent*) a;
+	struct dirent* bd = (struct dirent*) b;
+	int ctr = 0;
+
+	while (ad->d_name[ctr] || bd->d_name[ctr]) {
+		if (ad->d_name[ctr] > bd->d_name[ctr]) return 1;
+		else if (ad->d_name[ctr] < bd->d_name[ctr]) return -1;
+		ctr++;
+	}
+
+	if (ad->d_name[ctr] > bd->d_name[ctr]) return 1;
+	else if (ad->d_name[ctr] < bd->d_name[ctr]) return -1;
+	return 0;
+}
+
 
 int main(int argc, char* argv[]) {
 	struct d_info info = {0};
@@ -40,7 +57,9 @@ int main(int argc, char* argv[]) {
 
 	if (argc - optind == 0) {
 		rdir(here, &info);
+		qsort(info.l, info.num, sizeof(struct dirent), &case_in);
 		print(&info, here, opt);
+		free(info.l);
 	}
 
 	for (int i = optind; i < argc; i++) {
@@ -61,6 +80,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		print(&info, argv[i], opt);
+		free(info.l);
 	}
 
 }
@@ -117,6 +137,11 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 	struct passwd *uid;
 	struct group *gid;
 	char mtime[30];
+
+	int mid = 0; // memorize
+	char mname[30]; // memorize
+	char *name;
+
 	sprintf(fpath, "%s/%s", p, f);
 	lstat(fpath, &l_opt);
 
@@ -149,9 +174,10 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 		? 'T' : '-';
 
 	uid = getpwuid(l_opt.st_uid);
+
 	gid = getgrgid(l_opt.st_gid);
 
 	strftime(mtime, 30,  "%b %e %R", localtime(&l_opt.st_mtim.tv_sec));
 
-	printf("%s %lu %s %s %lu %s %s\n", perm, l_opt.st_nlink, uid->pw_name, gid->gr_name, l_opt.st_size, mtime, f);
+	printf("%s %lu %s %-8s %8lu %s %s\n", perm, l_opt.st_nlink, uid->pw_name , gid->gr_name, l_opt.st_size, mtime, f);
 }
