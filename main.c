@@ -22,7 +22,7 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f); // file 
 
 int rdir(const char *__restrict__ p, struct d_info *__restrict__ info);
 
-void print(struct d_info *__restrict__ info, const char *__restrict__ p, unsigned int opt);
+void print(const struct d_info *__restrict__ info, const char *__restrict__ p, unsigned int opt);
 
 int case_in (const void* a, const void* b) {
 	struct dirent* ad = (struct dirent*) a;
@@ -118,7 +118,7 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 	return rv;
 }
 
-void print(struct d_info *__restrict__ info, const char *__restrict__ p, unsigned int opt) {
+void print(const struct d_info *__restrict__ info, const char *__restrict__ p, unsigned int opt) {
 	for (int i = 0; i < info->num; i++) {
 		if (!(opt & ALL) && info->l[i].d_name[0] == '.') continue;
 		if (opt & LONG) printfile(p, info->l[i].d_name);
@@ -138,9 +138,13 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 	struct group *gid;
 	char mtime[30];
 
-	int mid = 0; // memorize
-	char mname[30]; // memorize
-	char *name;
+	static int muid = 0; // memorize
+	static char muname[30] = {0}; // memorize
+	static char *uname = NULL;
+
+	static int mgid = 0; // memorize
+	static char mgname[30] = {0}; // memorize
+	static char *gname = NULL;
 
 	sprintf(fpath, "%s/%s", p, f);
 	lstat(fpath, &l_opt);
@@ -173,11 +177,29 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 		: (l_opt.st_mode & S_IXOTH) ? 'x' : (l_opt.st_mode & S_ISVTX)
 		? 'T' : '-';
 
-	uid = getpwuid(l_opt.st_uid);
+	// uid = getpwuid(l_opt.st_uid);
+	
+	if (muid == l_opt.st_uid) {
+		uname = muname;
+	} else {
+		strcpy(muname, getpwuid(l_opt.st_uid)->pw_name);
+		uname = muname;
+	}
 
-	gid = getgrgid(l_opt.st_gid);
+	// gid = getgrgid(l_opt.st_gid);
 
 	strftime(mtime, 30,  "%b %e %R", localtime(&l_opt.st_mtim.tv_sec));
 
-	printf("%s %lu %s %-8s %8lu %s %s\n", perm, l_opt.st_nlink, uid->pw_name , gid->gr_name, l_opt.st_size, mtime, f);
+	if (mgid == l_opt.st_gid) {
+		gname = mgname;
+	} else {
+		strcpy(mgname, getgrgid(l_opt.st_uid)->gr_name);
+		gname = mgname;
+	}
+
+
+
+	// printf("%s %lu %s %-8s %8lu %s %s\n", perm, l_opt.st_nlink, uid->pw_name , gid->gr_name, l_opt.st_size, mtime, f);
+	
+	printf("%s %lu %s %-8s %8lu %s %s\n", perm, l_opt.st_nlink, uname , gname, l_opt.st_size, mtime, f);
 }
