@@ -18,6 +18,10 @@ struct d_info {
 	struct dirent* l;
 };
 
+enum err {
+	noerror, mem
+};
+
 void printfile(const char *__restrict__ p, const char *__restrict__ f); // file path
 
 int rdir(const char *__restrict__ p, struct d_info *__restrict__ info);
@@ -70,11 +74,14 @@ int main(int argc, char* argv[]) {
 				continue;
 			}
 		} else {
-			fprintf(stderr, "%s: %s: %s", argv[0], argv[i], strerror(errno));
+			fprintf(stderr, "%s: %s: %s\n", argv[0], argv[i], strerror(errno));
 			continue;
 		}
 
-		rdir(argv[i], &info);
+		if (rdir(argv[i], &info) == mem) {
+			return 1;
+		}
+
 		if (argc - optind > 1) {
 			printf("%s:\n", argv[i]);
 		}
@@ -89,12 +96,20 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 	DIR* dir = opendir(p);
 	struct dirent* entry;
 	int rv = 0;
-	info->l = malloc(2000 * sizeof(struct dirent));
 	info->num = 0;
 
 	if (dir == NULL) {
 		fprintf(stderr, "%s: %s\n", p,  strerror(errno));
 		return 1;
+	}
+
+	
+	info->l = malloc(2000 * sizeof(struct dirent));
+
+	if (info->l == 0) {
+		fprintf(stderr, "malloc: %s\n", strerror(errno));
+		closedir(dir);
+		return mem;
 	}
 
 	do {
@@ -104,8 +119,7 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 			memcpy(info->l + info->num, entry, sizeof(struct dirent));
 			info->num++;
 		} else if (errno != 0) {
-			fprintf(stderr, "Readdir: %s", strerror(errno));
-			free(info->l);
+			fprintf(stderr, "Error while processing %s: %s\n", p, strerror(errno));
 			rv = 1;
 		}
 
@@ -133,7 +147,6 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 	struct stat l_opt;
 	char perm[20] = {0};
 	char mdate[100] = {0};
-	char size[100] = {0};
 	struct passwd *uid;
 	struct group *gid;
 	char mtime[30];
@@ -147,7 +160,9 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 	static char *gname = NULL;
 
 	sprintf(fpath, "%s/%s", p, f);
-	lstat(fpath, &l_opt);
+	if (lstat(fpath, &l_opt) != 0) {
+		fprintf(stderr, "Can't stat file %s: %s\n", fpath, strerror(errno));
+	}
 
 	switch (l_opt.st_mode & S_IFMT) {
 		case S_IFREG: perm[0] = '-'; break;
