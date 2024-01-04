@@ -146,10 +146,9 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 	char fpath[100] = {0};
 	struct stat l_opt;
 	char perm[20] = {0};
-	char mdate[100] = {0};
-	struct passwd *uid;
-	struct group *gid;
 	char mtime[30];
+	// struct passwd *uid;
+	// struct group *gid;
 
 	static int muid = 0; // memorize
 	static char muname[30] = {0}; // memorize
