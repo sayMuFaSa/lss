@@ -213,7 +213,6 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 	}
 
 
-
 	// printf("%s %lu %s %-8s %8lu %s %s\n", perm, l_opt.st_nlink, uid->pw_name , gid->gr_name, l_opt.st_size, mtime, f);
 	
 	printf("%s %lu %s %-8s %8lu %s %s\n", perm, l_opt.st_nlink, uname , gname, l_opt.st_size, mtime, f);
