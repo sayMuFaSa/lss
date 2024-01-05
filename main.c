@@ -9,9 +9,14 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
+#include <getopt.h>
 
-#define ALL 0b1u // ALL
-#define LONG 0b1u << 1 // long output
+enum options {
+	DEF,
+	ALL = 1u, LONG = 1u << 1
+};
+
+typedef enum options opt_t;
 
 struct d_info {
 	int num;
@@ -26,7 +31,7 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f); // file 
 
 int rdir(const char *__restrict__ p, struct d_info *__restrict__ info);
 
-void print(const struct d_info *__restrict__ info, const char *__restrict__ p, unsigned int opt);
+void print(const struct d_info *__restrict__ info, const char *__restrict__ p, opt_t opt);
 
 int case_in (const void* a, const void* b) {
 	struct dirent* ad = (struct dirent*) a;
@@ -48,7 +53,7 @@ int case_in (const void* a, const void* b) {
 int main(int argc, char* argv[]) {
 	struct d_info info = {0};
 	const char *here = ".";
-	unsigned int opt = 0;
+	opt_t opt = DEF;
 	int arg;
 
 	while ((arg = getopt(argc, argv, "laf")) != -1) {
@@ -132,7 +137,7 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 	return rv;
 }
 
-void print(const struct d_info *__restrict__ info, const char *__restrict__ p, unsigned int opt) {
+void print(const struct d_info *__restrict__ info, const char *__restrict__ p, opt_t opt) {
 	for (int i = 0; i < info->num; i++) {
 		if (!(opt & ALL) && info->l[i].d_name[0] == '.') continue;
 		if (opt & LONG) printfile(p, info->l[i].d_name);
