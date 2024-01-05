@@ -14,7 +14,8 @@
 enum options {
 	DEF,
 	ALL = 1u,
-	LONG = 1u << 1
+	LONG = 1u << 1,
+	ONEPL = LONG << 1
 };
 
 typedef enum options opt_t;
@@ -42,10 +43,11 @@ int main(int argc, char* argv[]) {
 	opt_t opt = DEF;
 	int arg;
 
-	while ((arg = getopt(argc, argv, "laf")) != -1) {
+	while ((arg = getopt(argc, argv, "laf1")) != -1) {
 		switch (arg) {
 			case 'l': opt |= LONG; break;
 			case 'a': opt |= ALL; break;
+			case '1': opt |= ONEPL; break;
 			case '?': fprintf(stderr, "Unknown option\n"); break;
 		}
 	}
@@ -96,7 +98,7 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 		return 1;
 	}
 
-	
+
 	info->l = malloc(2000 * sizeof(struct dirent));
 
 	if (info->l == 0) {
@@ -120,8 +122,6 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 
 	closedir(dir);
 
-	putchar('\n');
-
 	return rv;
 }
 
@@ -129,16 +129,17 @@ void print(const struct d_info *__restrict__ info, const char *__restrict__ p, o
 	for (int i = 0; i < info->num; i++) {
 		if (!(opt & ALL) && info->l[i].d_name[0] == '.') continue;
 		if (opt & LONG) printfile(p, info->l[i].d_name);
+		else if (opt & ONEPL) printf("%s\n", info->l[i].d_name); 
 		else printf("%s ", info->l[i].d_name);
 	}
-	
-	if (!(opt & LONG)) putchar('\n');
+
+	if (!(opt & (LONG | ONEPL))) putchar('\n');
 }
 
 void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is parent and f is file
 	char fpath[100] = {0};
 	struct stat l_opt;
-	char perm[20] = {0};
+	char perm[20] = {0}; // this string also includes file type
 	char mtime[30];
 	// struct passwd *uid;
 	// struct group *gid;
@@ -157,13 +158,13 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 	}
 
 	switch (l_opt.st_mode & S_IFMT) {
-		case S_IFREG: perm[0] = '-'; break;
-		case S_IFDIR: perm[0] = 'd'; break;
-		case S_IFLNK: perm[0] = 'l'; break;
-		case S_IFCHR: perm[0] = 'c'; break;
-		case S_IFBLK: perm[0] = 'b'; break;
+		case S_IFREG:  perm[0] = '-'; break;
+		case S_IFDIR:  perm[0] = 'd'; break;
+		case S_IFLNK:  perm[0] = 'l'; break;
+		case S_IFCHR:  perm[0] = 'c'; break;
+		case S_IFBLK:  perm[0] = 'b'; break;
 		case S_IFSOCK: perm[0] = 's'; break;
-		case S_IFIFO: perm[0] = 'p'; break;
+		case S_IFIFO:  perm[0] = 'p'; break;
 	}
 
 	perm[1] = (l_opt.st_mode & S_IRUSR) ? 'r' : '-';
