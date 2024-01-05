@@ -14,7 +14,7 @@
 enum options {
 	DEF,
 	ALL = 1u,
-	LONG = 1u << 1,
+	LONG = ALL << 1,
 	ONEPL = LONG << 1
 };
 
@@ -92,6 +92,7 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 	struct dirent* entry;
 	int rv = 0;
 	info->num = 0;
+	int max = 16;
 
 	if (dir == NULL) {
 		fprintf(stderr, "%s: %s\n", p,  strerror(errno));
@@ -99,7 +100,7 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 	}
 
 
-	info->l = malloc(2000 * sizeof(struct dirent));
+	info->l = malloc(sizeof(struct dirent) * max);
 
 	if (info->l == 0) {
 		fprintf(stderr, "malloc: %s\n", strerror(errno));
@@ -109,10 +110,14 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 
 	do {
 		entry = readdir(dir);
-
+		
 		if (entry != 0) {
 			memcpy(info->l + info->num, entry, sizeof(struct dirent));
 			info->num++;
+			while (info->num >= max) {
+				info->l = realloc(info->l, sizeof(struct dirent) * max * 2);
+				max *= 2;
+			}
 		} else if (errno != 0) {
 			fprintf(stderr, "Error while processing %s: %s\n", p, strerror(errno));
 			rv = 1;
