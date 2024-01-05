@@ -13,7 +13,8 @@
 
 enum options {
 	DEF,
-	ALL = 1u, LONG = 1u << 1
+	ALL = 1u,
+	LONG = 1u << 1
 };
 
 typedef enum options opt_t;
@@ -33,22 +34,7 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info);
 
 void print(const struct d_info *__restrict__ info, const char *__restrict__ p, opt_t opt);
 
-int case_in (const void* a, const void* b) {
-	struct dirent* ad = (struct dirent*) a;
-	struct dirent* bd = (struct dirent*) b;
-	int ctr = 0;
-
-	while (ad->d_name[ctr] || bd->d_name[ctr]) {
-		if (ad->d_name[ctr] > bd->d_name[ctr]) return 1;
-		else if (ad->d_name[ctr] < bd->d_name[ctr]) return -1;
-		ctr++;
-	}
-
-	if (ad->d_name[ctr] > bd->d_name[ctr]) return 1;
-	else if (ad->d_name[ctr] < bd->d_name[ctr]) return -1;
-	return 0;
-}
-
+int case_in (const void* a, const void* b);
 
 int main(int argc, char* argv[]) {
 	struct d_info info = {0};
@@ -90,6 +76,8 @@ int main(int argc, char* argv[]) {
 		if (argc - optind > 1) {
 			printf("%s:\n", argv[i]);
 		}
+
+		qsort(info.l, info.num, sizeof(struct dirent), &case_in);
 
 		print(&info, argv[i], opt);
 		free(info.l);
@@ -220,4 +208,20 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 	// printf("%s %lu %s %-8s %8lu %s %s\n", perm, l_opt.st_nlink, uid->pw_name , gid->gr_name, l_opt.st_size, mtime, f);
 	
 	printf("%s %lu %s %-8s %8lu %s %s\n", perm, l_opt.st_nlink, uname , gname, l_opt.st_size, mtime, f);
+}
+
+int case_in (const void* a, const void* b) {
+	struct dirent* ad = (struct dirent*) a;
+	struct dirent* bd = (struct dirent*) b;
+	int ctr = 0;
+
+	while (ad->d_name[ctr] || bd->d_name[ctr]) {
+		if (ad->d_name[ctr] > bd->d_name[ctr]) return 1;
+		if (ad->d_name[ctr] < bd->d_name[ctr]) return -1;
+		ctr++;
+	}
+
+	if (ad->d_name[ctr] > bd->d_name[ctr]) return 1;
+	else if (ad->d_name[ctr] < bd->d_name[ctr]) return -1;
+	return 0;
 }
