@@ -22,6 +22,7 @@ typedef enum options opt_t;
 
 struct d_info {
 	int num;
+	int max;
 	struct dirent* l;
 };
 
@@ -92,7 +93,7 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 	struct dirent* entry;
 	int rv = 0;
 	info->num = 0;
-	int max = 16;
+	info->max = 16;
 
 	if (dir == NULL) {
 		fprintf(stderr, "%s: %s\n", p,  strerror(errno));
@@ -100,7 +101,7 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 	}
 
 
-	info->l = malloc(sizeof(struct dirent) * max);
+	info->l = malloc(sizeof(struct dirent) * info->max);
 
 	if (info->l == 0) {
 		fprintf(stderr, "malloc: %s\n", strerror(errno));
@@ -114,9 +115,9 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 		if (entry != 0) {
 			memcpy(info->l + info->num, entry, sizeof(struct dirent));
 			info->num++;
-			while (info->num >= max) {
-				info->l = realloc(info->l, sizeof(struct dirent) * max * 2);
-				max *= 2;
+			while (info->num >= info->max) {
+				info->l = realloc(info->l, sizeof(struct dirent) * info->max * 2);
+				info->max *= 2;
 			}
 		} else if (errno != 0) {
 			fprintf(stderr, "Error while processing %s: %s\n", p, strerror(errno));
@@ -146,14 +147,12 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 	struct stat l_opt;
 	char perm[20] = {0}; // this string also includes file type
 	char mtime[30];
-	// struct passwd *uid;
-	// struct group *gid;
 
-	static int muid = 0; // memorize
+	static unsigned int muid = 0; // memorize
 	static char muname[30] = {0}; // memorize
 	static char *uname = NULL;
 
-	static int mgid = 0; // memorize
+	static unsigned int mgid = 0; // memorize
 	static char mgname[30] = {0}; // memorize
 	static char *gname = NULL;
 
@@ -190,7 +189,6 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 		: (l_opt.st_mode & S_IXOTH) ? 'x' : (l_opt.st_mode & S_ISVTX)
 		? 'T' : '-';
 
-	// uid = getpwuid(l_opt.st_uid);
 	
 	if (muid == l_opt.st_uid) {
 		uname = muname;
@@ -199,16 +197,14 @@ void printfile(const char *__restrict__ p, const char *__restrict__ f) { // p is
 		uname = muname;
 	}
 
-	// gid = getgrgid(l_opt.st_gid);
-
-	strftime(mtime, 30,  "%b %e %R", localtime(&l_opt.st_mtim.tv_sec));
-
 	if (mgid == l_opt.st_gid) {
 		gname = mgname;
 	} else {
 		strcpy(mgname, getgrgid(l_opt.st_uid)->gr_name);
 		gname = mgname;
 	}
+
+	strftime(mtime, 30,  "%b %e %R", localtime(&l_opt.st_mtim.tv_sec));
 
 
 	// printf("%s %lu %s %-8s %8lu %s %s\n", perm, l_opt.st_nlink, uid->pw_name , gid->gr_name, l_opt.st_size, mtime, f);
