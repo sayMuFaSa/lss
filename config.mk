@@ -1,2 +1,1 @@
-CC=musl-gcc
-CFLAGS=-static
+CC=gcc

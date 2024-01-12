@@ -23,7 +23,7 @@ typedef enum options opt_t;
 struct d_info {
 	int num;
 	int max;
-	struct dirent* l;
+	struct dirent* child;
 };
 
 enum err {
@@ -55,9 +55,9 @@ int main(int argc, char* argv[]) {
 
 	if (argc - optind == 0) {
 		rdir(here, &info);
-		qsort(info.l, info.num, sizeof(struct dirent), &case_in);
+		qsort(info.child, info.num, sizeof(struct dirent), &case_in);
 		print(&info, here, opt);
-		free(info.l);
+		free(info.child);
 	}
 
 	for (int i = optind; i < argc; i++) {
@@ -80,10 +80,10 @@ int main(int argc, char* argv[]) {
 			printf("%s:\n", argv[i]);
 		}
 
-		qsort(info.l, info.num, sizeof(struct dirent), &case_in);
+		qsort(info.child, info.num, sizeof(struct dirent), &case_in);
 
 		print(&info, argv[i], opt);
-		free(info.l);
+		free(info.child);
 	}
 
 }
@@ -101,9 +101,9 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 	}
 
 
-	info->l = malloc(sizeof(struct dirent) * info->max);
+	info->child = malloc(sizeof(struct dirent) * info->max);
 
-	if (info->l == 0) {
+	if (info->child == 0) {
 		fprintf(stderr, "malloc: %s\n", strerror(errno));
 		closedir(dir);
 		return mem;
@@ -113,10 +113,10 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 		entry = readdir(dir);
 		
 		if (entry != 0) {
-			memcpy(info->l + info->num, entry, sizeof(struct dirent));
+			memcpy(info->child + info->num, entry, sizeof(struct dirent));
 			info->num++;
 			while (info->num >= info->max) {
-				info->l = realloc(info->l, sizeof(struct dirent) * info->max * 2);
+				info->child = realloc(info->child, sizeof(struct dirent) * info->max * 2);
 				info->max *= 2;
 			}
 		} else if (errno != 0) {
@@ -133,10 +133,10 @@ int rdir(const char *__restrict__ p, struct d_info *__restrict__ info) {
 
 void print(const struct d_info *__restrict__ info, const char *__restrict__ p, opt_t opt) {
 	for (int i = 0; i < info->num; i++) {
-		if (!(opt & ALL) && info->l[i].d_name[0] == '.') continue;
-		if (opt & LONG) printfile(p, info->l[i].d_name);
-		else if (opt & ONEPL) printf("%s\n", info->l[i].d_name); 
-		else printf("%s ", info->l[i].d_name);
+		if (!(opt & ALL) && info->child[i].d_name[0] == '.') continue;
+		if (opt & LONG) printfile(p, info->child[i].d_name);
+		else if (opt & ONEPL) printf("%s\n", info->child[i].d_name); 
+		else printf("%s ", info->child[i].d_name);
 	}
 
 	if (!(opt & (LONG | ONEPL))) putchar('\n');

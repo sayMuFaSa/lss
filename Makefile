@@ -1,6 +1,4 @@
 include config.mk
-CC ?= gcc
-CFLAGS ?=
 
 all:debug
 debug:
