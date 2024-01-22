@@ -92,8 +92,9 @@ err_t rdir(struct d_info *__restrict__ info, const char *__restrict__ p)
 	DIR* dir = opendir(p);
 	int rv = 0;
 	const size_t size = info->size;
-	struct dirent* entry;
+	struct dirent* entry = NULL;
 	const opt_t opt = info->opt;
+	void *copy_to;
 
 	if (dir == NULL) {
 		fprintf(stderr, "%s: %s\n", p,  strerror(errno));
@@ -102,10 +103,7 @@ err_t rdir(struct d_info *__restrict__ info, const char *__restrict__ p)
 
 	errno = 0;
 
-	while ((entry = readdir(dir)) != 0) {
-		void* copy_to = (info->desc) 
-			? &info->desc[info->num].child 
-			: info->child + info->num;
+	while ((entry = readdir(dir)) != NULL) {
 
 		if (!(opt & ALL) && entry->d_name[0] == '.') {
 			continue;
@@ -115,12 +113,19 @@ err_t rdir(struct d_info *__restrict__ info, const char *__restrict__ p)
 			if (alloc(info))
 				break;
 
+		copy_to = (info->desc)
+			      ? &info->desc[info->num].child
+			      : info->child + info->num;
+
 		memcpy(copy_to, entry, size);
 
 		info->num++;
-	}
 
-	printf("Hello\n");
+		if (errno != 0) {
+			printf("Max error: %s\n", strerror(errno));
+		}
+		errno = 0;
+	}
 
 	if (errno != 0) {
 		fprintf(stderr, "Error while processing %s: %s\n", p, strerror(errno));
@@ -137,22 +142,19 @@ err_t rdir(struct d_info *__restrict__ info, const char *__restrict__ p)
 int alloc(struct d_info *info) 
 {
 	const size_t size = info->size;
-	size_t num = info->num;
-	size_t max = info->max;
-
-	num *= 2;
+	const size_t max = info->max * 2;
 
 	if (info->desc)
-		info->desc = realloc(info->desc, size * num);
+		info->desc = realloc(info->desc, size * max);
 	else 
-		info->child = realloc(info->child, size * num);
+		info->child = realloc(info->child, size * max);
 
 	if (info->desc == 0 && info->child == 0) {
 		fprintf(stderr, "Alloc: %s\n", strerror(errno));
 		return 1;
 	}
 
-	info->max = num;
+	info->max = max;
 
 	return 0;
 }

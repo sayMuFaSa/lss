@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 
 	if (opt == UNKNOWN) return 2;
 
-	if (init(&info, opt, 100) != 0)
+	if (init(&info, opt, 2) != 0)
 		return 2;
 
 	if (argc - optind == 0){
