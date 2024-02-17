@@ -1,1 +1,31 @@
-# Add an option to be able to use musl locally instead of relying on system's libc.
+#!/usr/bin/sh
+
+PROJ_DIR=$(dirname $0)
+
+[ "$PROJ_DIR" = '.' ] || cp "${PROJ_DIR}/Makefile" .
+
+cat <<EOF > config.mk
+CC=gcc
+
+PROJ_DIR=${PROJ_DIR}
+BUILD_DIR=build
+PREFIX=/usr/local/bin
+APP=lss
+
+RELEASE_CFLAGS=-Wall -Wextra -O3
+RELEASE_LDFLAGS=-s
+
+DEBUG_CFLAGS=-Wall -Wextra -g
+DEBUG_LDFLAGS=-g
+
+DEFAULT_MODE=release
+EOF
+
+cat <<EOF
+
+              Overview.
+Project directory: ${PROJ_DIR}/
+Build mode: release
+Build directory: build/
+Install prefix: /usr/local/bin
+EOF
