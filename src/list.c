@@ -3,8 +3,6 @@
 #include <string.h>
 #include <stdio.h>
 
-static int vec_push(vec_t* vec, const void* item);
-
 int list(struct d_info* info, const char* p, const opt_t opt)
 {
 	DIR* dir = opendir(p);
@@ -17,7 +15,7 @@ int list(struct d_info* info, const char* p, const opt_t opt)
 	}
 
 	errno = 0;
-	info->child.num = 0;
+	info->child.vec.num = 0;
 
 	while ((entry = readdir(dir)) != NULL) {
 
@@ -25,7 +23,7 @@ int list(struct d_info* info, const char* p, const opt_t opt)
 			continue;
 		}
 
-		if (vec_push(&info->child, entry)) {
+		if (vec_push_dirent(&info->child, entry)) {
 			rv = -1;
 			goto CLEAN;
 		}
@@ -44,26 +42,4 @@ int list(struct d_info* info, const char* p, const opt_t opt)
 CLEAN:
 	closedir(dir);
 	return rv;
-}
-
-int vec_push(vec_t* vec, const void* item)
-{
-	const size_t size = vec->size;
-	const size_t max  = vec->max;
-	const size_t n    = vec->num;
-	char* dest        = vec->data;
-
-	if (n >= max) {
-		vec->data = realloc(vec->data, size * max * 2);
-		if (vec->data == NULL)
-			return -1;
-
-		dest = vec->data;
-		vec->max *= 2;
-	}
-
-	dest += size * n;
-	memcpy(dest, item, size);
-	vec->num = n + 1;
-	return 0;
 }

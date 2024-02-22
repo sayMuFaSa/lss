@@ -2,7 +2,7 @@
 LSS(ls simplified) is a simple implementation of ls command found on unix-like systems.
 
 ## Main goals
-- Readablity
+- Readability
 - Simplicity
 
 ## NOTE:

@@ -46,8 +46,7 @@ opt_t parse(const int argc, char* argv[])
 
 int ls (struct d_info* info,  const char* target, const opt_t opt)
 {
-	const vec_t* child = &info->child;
-	struct stat  file;
+	struct stat file;
 
 	if (stat(target, &file) != 0) {
 		fprintf(stderr, "%s: %s\n", target, strerror(errno));
@@ -62,7 +61,7 @@ int ls (struct d_info* info,  const char* target, const opt_t opt)
 	if (list(info, target, opt))
 		return -1;
 
-	qsort(child->data, child->num, child->size, &alpha);
+	vec_sort_dirent(&info->child, &alpha);
 
 	if (opt & LONG)
 		if (get_stats(info, target))
@@ -86,18 +85,16 @@ int alpha (const void* a, const void* b)
 		if (aname[ctr] < bname[ctr]) return -1;
 	}
 
-	if (aname[ctr] > bname[ctr]) return 1;
-	if (aname[ctr] < bname[ctr]) return -1;
 	return 0;
 }
 
 
 
-int get_stats(struct d_info* info, const char*  p) 
+int get_stats(struct d_info* info, const char*  p)
 {
-	const size_t it = info->child.num;
+	const size_t it = info->child.vec.num;
 	const size_t size = sizeof(struct stat);
-	const struct dirent* child = info->child.data;
+	const struct dirent* child = info->child.vec.data;
 	char path[PATH_MAX];
 
 	info->stats = malloc(it * size);

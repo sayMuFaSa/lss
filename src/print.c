@@ -40,8 +40,8 @@ void print(const struct d_info* info, const char* p, const opt_t opt)
 
 void print_default(const struct d_info* info)
 {
-	const struct dirent* data = info->child.data;
-	const size_t n = info->child.num;
+	const struct dirent* data = info->child.vec.data;
+	const size_t n = info->child.vec.num;
 	size_t rows, cols, width;
 	
 	if (get_format(info, &rows, &cols, &width))
@@ -70,8 +70,8 @@ void print_default(const struct d_info* info)
 
 void print_per_line (const struct d_info* info)
 {
-	const size_t n = info->child.num;
-	const struct dirent* data = info->child.data;
+	const size_t n = info->child.vec.num;
+	const struct dirent* data = info->child.vec.data;
 
 	for (size_t i = 0; i < n; i++)
 		puts(data[i].d_name);
@@ -82,9 +82,9 @@ int get_format (const struct d_info* info, size_t* rows, size_t* cols, size_t* w
 	struct winsize size = {0};
 	size_t max_name_length = 1;
 	const size_t tab = 2;
-	const size_t n = info->child.num;
+	const size_t n = info->child.vec.num;
 	size_t col_max;
-	const struct dirent* data = info->child.data;
+	const struct dirent* data = info->child.vec.data;
 
 	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &size) == -1) {
 		fprintf(stderr, "get_format: %s", strerror(errno));
@@ -112,8 +112,8 @@ int get_format (const struct d_info* info, size_t* rows, size_t* cols, size_t* w
 
 void print_long(const struct d_info* info, const char* p)
 { 
-	const struct dirent* data  = info->child.data;
-	const size_t n = info->child.num;
+	const struct dirent* data  = info->child.vec.data;
+	const size_t n = info->child.vec.num;
 
 	char fpath[PATH_MAX] = {0};
 	char link_buf[PATH_MAX] = {0};

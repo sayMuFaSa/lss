@@ -1,3 +1,4 @@
 lss
 *.out
 *.o
+config.mk

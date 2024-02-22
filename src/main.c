@@ -1,3 +1,4 @@
+#define VEC_IMPLEMENTATION
 #include "ls.h"
 #include <getopt.h>
 #include <stdlib.h>
@@ -5,8 +6,6 @@
 #include <string.h>
 
 static int init(struct d_info* info, const size_t min);
-static int vec_init (vec_t* vec, const size_t size, const size_t max);
-static void vec_destroy (vec_t* vec);
 static void deinit(struct d_info* info, const opt_t opt);
 
 
@@ -37,35 +36,22 @@ int main(int argc, char* argv[])
 
 int init (struct d_info* info, const size_t min) 
 {
-	const size_t size = sizeof(struct dirent);
+	if (vec_init_dirent(&info->child, min)) {
+		const char *err_msg = (vec_err == VEC_MALLOC) 
+			                ? strerror(errno) 
+							:  vec_strerror(vec_err);
 
-	if (vec_init(&info->child, size, min)) {
-		fprintf(stderr, "Init: %s", strerror(errno));
+		fprintf(stderr, "Init: %s", err_msg);
 		return -1;
 	}
 
 	return 0;
 }
 
-int vec_init(vec_t* vec, const size_t size, const size_t max)
-{
-	vec->data = malloc(max * size);
-	if (vec->data == NULL) 
-		return -1;
-
-	vec->max = max;
-	vec->size = size;
-	return 0;
-}
-
-void vec_destroy(vec_t* vec)
-{
-	free(vec->data);
-}
 
 void deinit(struct d_info* info, const opt_t opt)
 {
-	vec_destroy(&info->child);
+	vec_deinit_dirent(&info->child);
 
 	if (opt & LONG)
 		free(info->stats);

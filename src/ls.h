@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include "vec.h"
 
 typedef enum {
 	DEF,
@@ -14,15 +15,10 @@ typedef enum {
 	MULTIPLE = ONEPL << 1
 } opt_t;
 
-typedef struct {
-	size_t size;
-	size_t num;
-	size_t max;
-	void* data;
-} vec_t;
+vec_define(struct dirent,dirent)
 
 struct d_info {
-	vec_t child;
+	vec_dirent child;
 	struct stat* stats;
 };
 
