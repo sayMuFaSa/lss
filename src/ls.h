@@ -4,6 +4,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <errno.h>
+
+#define VEC_MACROS
 #include "vec.h"
 
 typedef enum {
@@ -15,12 +17,14 @@ typedef enum {
 	MULTIPLE = ONEPL << 1
 } opt_t;
 
-vec_define(struct dirent,dirent)
+vec_declare(struct dirent,dirent)
 
 struct d_info {
 	vec_dirent child;
 	struct stat* stats;
 };
+
+
 
 int list(struct d_info* info, const char* p, const opt_t opt);
 

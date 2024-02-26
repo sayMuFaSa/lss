@@ -15,7 +15,7 @@ int list(struct d_info* info, const char* p, const opt_t opt)
 	}
 
 	errno = 0;
-	info->child.vec.num = 0;
+	info->child.num = 0;
 
 	while ((entry = readdir(dir)) != NULL) {
 
@@ -24,6 +24,7 @@ int list(struct d_info* info, const char* p, const opt_t opt)
 		}
 
 		if (vec_push_dirent(&info->child, entry)) {
+			fprintf(stderr, "List: %s\n", strerror(errno));
 			rv = -1;
 			goto CLEAN;
 		}

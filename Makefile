@@ -14,9 +14,9 @@ release: LDFLAGS:=$(RELEASE_LDFLAGS)
 release:$(APP)
 
 install:$(DEFAULT_MODE)
-	mv $(APP) $(PREFIX)
+	@mv -v $(APP) $(PREFIX)
 uninstall:
-	rm $(PREFIX)/$(APP)
+	@rm -v $(PREFIX)/$(APP)
 
 $(APP):$(OBJ)
 	$(CC) -o $@ $(LDFLAGS) $^

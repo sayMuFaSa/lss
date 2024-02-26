@@ -2,6 +2,12 @@
 
 ## v0.1.0
 
+### Optimize the user and group outputing. - 2024-02-27
+- Vectors are now used for collecting user and group data so systemcalls for fetching the owner and group are not invoked for each individual file.
+- The macros and functions are now separated in the vector library, macros are defined only if requested by defning VEC_MACROS before the header.
+- The comparison function is now completely readable.
+- Observing silent commands in Makefile.
+
 ### Use vector library. - 2024-02-22
 - A dedicated single header vector(growable array) library is written and used.
 - Sorting pattern modified in the function alpha.

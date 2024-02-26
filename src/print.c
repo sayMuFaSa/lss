@@ -40,8 +40,8 @@ void print(const struct d_info* info, const char* p, const opt_t opt)
 
 void print_default(const struct d_info* info)
 {
-	const struct dirent* data = info->child.vec.data;
-	const size_t n = info->child.vec.num;
+	const struct dirent* data = info->child.data;
+	const size_t n = info->child.num;
 	size_t rows, cols, width;
 	
 	if (get_format(info, &rows, &cols, &width))
@@ -70,8 +70,8 @@ void print_default(const struct d_info* info)
 
 void print_per_line (const struct d_info* info)
 {
-	const size_t n = info->child.vec.num;
-	const struct dirent* data = info->child.vec.data;
+	const size_t n = info->child.num;
+	const struct dirent* data = info->child.data;
 
 	for (size_t i = 0; i < n; i++)
 		puts(data[i].d_name);
@@ -82,12 +82,12 @@ int get_format (const struct d_info* info, size_t* rows, size_t* cols, size_t* w
 	struct winsize size = {0};
 	size_t max_name_length = 1;
 	const size_t tab = 2;
-	const size_t n = info->child.vec.num;
+	const size_t n = info->child.num;
 	size_t col_max;
-	const struct dirent* data = info->child.vec.data;
+	const struct dirent* data = info->child.data;
 
 	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &size) == -1) {
-		fprintf(stderr, "get_format: %s", strerror(errno));
+		fprintf(stderr, "get_format: %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -110,28 +110,75 @@ int get_format (const struct d_info* info, size_t* rows, size_t* cols, size_t* w
 }
 
 
+struct Id {
+	size_t id;
+	char* name;
+};
+
+vec_declare(struct Id, Id)
+vec_define(struct Id, Id)
+
 void print_long(const struct d_info* info, const char* p)
 { 
-	const struct dirent* data  = info->child.vec.data;
-	const size_t n = info->child.vec.num;
+	const struct dirent* data  = info->child.data;
+	const size_t n = info->child.num;
 
 	char fpath[PATH_MAX] = {0};
 	char link_buf[PATH_MAX] = {0};
 	struct stat l_opt;
-	char perm[16] = {0}; 
+	char perm[16] = {0};
 	char mtime[30];
+	vec_Id user_data, group_data;
+
+	vec_init_Id(&user_data,  4);
+	vec_init_Id(&group_data, 4);
 
 	for (size_t i = 0; i < n; i++) {
 		const char *name = data[i].d_name;
-
+		char* uname = NULL;
+		char* gname = NULL;
+		
 		sprintf(fpath, "%s/%s", p, name);
 		if (lstat(fpath, &l_opt) != 0) {
 			fprintf(stderr, "Can't stat file %s: %s\n", fpath, strerror(errno));
 		}
 		
-		const char *uname = getpwuid(l_opt.st_uid)->pw_name;
-		const char *gname = getgrgid(l_opt.st_uid)->gr_name;
-		
+
+
+		for (size_t j = 0; j < user_data.num; j++) {
+			const struct Id* user = vec_get_Id(&user_data, j);
+			if (l_opt.st_uid == user->id) {
+				uname = user->name;
+				break;
+			}
+		}
+
+		if (uname == NULL) {
+			const struct passwd* user = getpwuid(l_opt.st_uid);
+			struct Id udata = {.id = user->pw_uid};
+			udata.name = malloc(strlen(user->pw_name) + 1);
+			strcpy(udata.name, user->pw_name);
+			vec_push_Id(&user_data, &udata);
+			uname = user->pw_name;
+		}
+
+		for (size_t j = 0; j < group_data.num; j++) {
+			const struct Id* group = vec_get_Id(&user_data, j);
+			if (l_opt.st_uid == group->id) {
+				gname = group->name;
+				break;
+			}
+		}
+
+		if (gname == NULL) {
+			const struct group* group = getgrgid(l_opt.st_gid);
+			struct Id gdata = {.id = group->gr_gid};
+			gdata.name = malloc(strlen(group->gr_name) + 1);
+			strcpy(gdata.name, group->gr_name);
+			vec_push_Id(&group_data, &gdata);
+			gname = group->gr_name;
+		}
+
 		switch (l_opt.st_mode & S_IFMT) {
 			case S_IFREG:  perm[0] = '-'; break;
 			case S_IFDIR:  perm[0] = 'd'; break;
@@ -170,10 +217,26 @@ void print_long(const struct d_info* info, const char* p)
 		memset(link_buf, 0, PATH_MAX);
 
 		if (readlink(fpath, link_buf, PATH_MAX) == -1) {
-			fprintf(stderr, "While reading soft link %s: %s", fpath, strerror(errno));
+			fprintf(stderr, "While reading soft link %s: %s\n", fpath, strerror(errno));
 			return;
 		}
 
-		printf("%s %lu %s %-8s %8lu %s %s -> %s\n", perm, l_opt.st_nlink, uname , gname, l_opt.st_size, mtime, name, link_buf);
+		printf("%s %lu %s %-8s %8lu %s %s -> %s\n", 
+				perm, l_opt.st_nlink, uname, gname, 
+				l_opt.st_size, mtime, name, link_buf);
+
 	}
+
+
+	for (size_t i = 0; i < user_data.num; i++) {
+		free(vec_get_Id(&user_data, i)->name);
+	}
+
+	for (size_t i = 0; i < group_data.num; i++) {
+		free(vec_get_Id(&group_data, i)->name);
+	}
+
+	vec_deinit_Id(&user_data);
+	vec_deinit_Id(&group_data);
+
 }

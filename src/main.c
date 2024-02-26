@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+vec_define(struct dirent,dirent);
+
 static int init(struct d_info* info, const size_t min);
 static void deinit(struct d_info* info, const opt_t opt);
 

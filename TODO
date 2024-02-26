@@ -1,1 +1,1 @@
-Optimize long option(-l) for faster execution.
+Use an existing string library or write one yourself for handling user and group names.
