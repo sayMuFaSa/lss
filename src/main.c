@@ -1,4 +1,5 @@
 #define VEC_IMPLEMENTATION
+#define STR_IMPLEMENTATION
 #include "ls.h"
 #include <getopt.h>
 #include <stdlib.h>

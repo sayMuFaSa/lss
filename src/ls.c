@@ -100,7 +100,7 @@ int get_stats(struct d_info* info, const char*  p)
 	info->stats = malloc(it * size);
 
 	if (info->stats == NULL) {
-		fprintf(stderr, "Malloc failed in get_stats: %s\n", strerror(errno));
+		perror("Malloc failed in get_stats");
 		return -1;
 	}
 

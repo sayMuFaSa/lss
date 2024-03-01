@@ -2,6 +2,14 @@
 
 ## v0.1.0
 
+### Use string library. - 2024-03-02
+- Now a handmade string library is used for group and user names.
+- All calls to fprintf are replaced by perror where appropriate.
+- More readable declaration of opt_t enum.
+- Dockerfile's added.
+- Configure script will link the executable statically on musl systems.
+- More readable variable names for user and group data.
+
 ### Optimize the user and group outputing. - 2024-02-27
 - Vectors are now used for collecting user and group data so systemcalls for fetching the owner and group are not invoked for each individual file.
 - The macros and functions are now separated in the vector library, macros are defined only if requested by defning VEC_MACROS before the header.

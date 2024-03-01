@@ -24,13 +24,13 @@ int list(struct d_info* info, const char* p, const opt_t opt)
 		}
 
 		if (vec_push_dirent(&info->child, entry)) {
-			fprintf(stderr, "List: %s\n", strerror(errno));
+			perror("List");
 			rv = -1;
 			goto CLEAN;
 		}
 
 		if (errno != 0) {
-			printf("Max error: %s\n", strerror(errno));
+			perror("Max error");
 		}
 		errno = 0;
 	}

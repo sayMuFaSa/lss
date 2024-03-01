@@ -87,7 +87,7 @@ int get_format (const struct d_info* info, size_t* rows, size_t* cols, size_t* w
 	const struct dirent* data = info->child.data;
 
 	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &size) == -1) {
-		fprintf(stderr, "get_format: %s\n", strerror(errno));
+		perror("get_format");
 		return -1;
 	}
 
@@ -112,7 +112,7 @@ int get_format (const struct d_info* info, size_t* rows, size_t* cols, size_t* w
 
 struct Id {
 	size_t id;
-	char* name;
+	str_t* name;
 };
 
 vec_declare(struct Id, Id)
@@ -128,27 +128,25 @@ void print_long(const struct d_info* info, const char* p)
 	struct stat l_opt;
 	char perm[16] = {0};
 	char mtime[30];
-	vec_Id user_data, group_data;
+	vec_Id known_users, known_groups;
 
-	vec_init_Id(&user_data,  4);
-	vec_init_Id(&group_data, 4);
+	vec_init_Id(&known_users,  4);
+	vec_init_Id(&known_groups, 4);
 
 	for (size_t i = 0; i < n; i++) {
 		const char *name = data[i].d_name;
 		char* uname = NULL;
 		char* gname = NULL;
-		
+
 		sprintf(fpath, "%s/%s", p, name);
-		if (lstat(fpath, &l_opt) != 0) {
+		if (lstat(fpath, &l_opt) != 0)
 			fprintf(stderr, "Can't stat file %s: %s\n", fpath, strerror(errno));
-		}
-		
 
 
-		for (size_t j = 0; j < user_data.num; j++) {
-			const struct Id* user = vec_get_Id(&user_data, j);
+		for (size_t j = 0; j < known_users.num; j++) {
+			const struct Id* user = vec_get_Id(&known_users, j);
 			if (l_opt.st_uid == user->id) {
-				uname = user->name;
+				uname = user->name->data;
 				break;
 			}
 		}
@@ -156,16 +154,16 @@ void print_long(const struct d_info* info, const char* p)
 		if (uname == NULL) {
 			const struct passwd* user = getpwuid(l_opt.st_uid);
 			struct Id udata = {.id = user->pw_uid};
-			udata.name = malloc(strlen(user->pw_name) + 1);
-			strcpy(udata.name, user->pw_name);
-			vec_push_Id(&user_data, &udata);
+			udata.name = str_create(user->pw_name);
+			if (udata.name == NULL) return;
+			vec_push_Id(&known_users, &udata);
 			uname = user->pw_name;
 		}
 
-		for (size_t j = 0; j < group_data.num; j++) {
-			const struct Id* group = vec_get_Id(&user_data, j);
+		for (size_t j = 0; j < known_groups.num; j++) {
+			const struct Id* group = vec_get_Id(&known_users, j);
 			if (l_opt.st_uid == group->id) {
-				gname = group->name;
+				gname = group->name->data;
 				break;
 			}
 		}
@@ -173,9 +171,9 @@ void print_long(const struct d_info* info, const char* p)
 		if (gname == NULL) {
 			const struct group* group = getgrgid(l_opt.st_gid);
 			struct Id gdata = {.id = group->gr_gid};
-			gdata.name = malloc(strlen(group->gr_name) + 1);
-			strcpy(gdata.name, group->gr_name);
-			vec_push_Id(&group_data, &gdata);
+			gdata.name = str_create(group->gr_name);
+			if (gdata.name == NULL) return;
+			vec_push_Id(&known_groups, &gdata);
 			gname = group->gr_name;
 		}
 
@@ -228,15 +226,15 @@ void print_long(const struct d_info* info, const char* p)
 	}
 
 
-	for (size_t i = 0; i < user_data.num; i++) {
-		free(vec_get_Id(&user_data, i)->name);
+	for (size_t i = 0; i < known_users.num; i++) {
+		str_destroy(vec_get_Id(&known_users, i)->name);
 	}
 
-	for (size_t i = 0; i < group_data.num; i++) {
-		free(vec_get_Id(&group_data, i)->name);
+	for (size_t i = 0; i < known_groups.num; i++) {
+		str_destroy(vec_get_Id(&known_groups, i)->name);
 	}
 
-	vec_deinit_Id(&user_data);
-	vec_deinit_Id(&group_data);
+	vec_deinit_Id(&known_users);
+	vec_deinit_Id(&known_groups);
 
 }

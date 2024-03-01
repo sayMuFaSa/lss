@@ -1,8 +1,14 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 PROJ_DIR=$(dirname $0)
 
 [ "$PROJ_DIR" = '.' ] || cp "${PROJ_DIR}/Makefile" .
+
+IF_MUSL=$(ldd --version 2>&1)
+case $IF_MUSL in
+	*musl*) STATIC=' -static' ;;
+	*) STATIC=''
+esac
 
 cat <<EOF > config.mk
 CC=gcc
@@ -12,11 +18,11 @@ BUILD_DIR=build
 PREFIX=/usr/local/bin
 APP=lss
 
-RELEASE_CFLAGS=-Wall -Wextra -O3
-RELEASE_LDFLAGS=-s
+RELEASE_CFLAGS=-Wall -Wextra -O3${STATIC}
+RELEASE_LDFLAGS=-s${STATIC}
 
-DEBUG_CFLAGS=-Wall -Wextra -g
-DEBUG_LDFLAGS=-g
+DEBUG_CFLAGS=-Wall -Wextra -g${STATIC}
+DEBUG_LDFLAGS=-g${STATIC}
 
 DEFAULT_MODE=release
 EOF
@@ -28,4 +34,5 @@ Project directory: ${PROJ_DIR}/
 Build mode: release
 Build directory: build/
 Install prefix: /usr/local/bin
+Linkage: $(test -z $STATIC && echo 'default for compiler' || echo 'static')
 EOF

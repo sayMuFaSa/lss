@@ -7,14 +7,15 @@
 
 #define VEC_MACROS
 #include "vec.h"
+#include "str.h"
 
 typedef enum {
 	DEF,
-	UNKNOWN = 1u,
-	ALL = UNKNOWN << 1,
-	LONG = ALL << 1,
-	ONEPL = LONG << 1,
-	MULTIPLE = ONEPL << 1
+	UNKNOWN  = 1u,
+	ALL      = 1u << 1,
+	LONG     = 1u << 2,
+	ONEPL    = 1u << 3,
+	MULTIPLE = 1u << 4
 } opt_t;
 
 vec_declare(struct dirent,dirent)
