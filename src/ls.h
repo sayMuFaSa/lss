@@ -6,7 +6,7 @@
 #include <errno.h>
 
 #define VEC_MACROS
-#include "vec.h"
+#include "vec/vec.h"
 #include "str.h"
 
 typedef enum {

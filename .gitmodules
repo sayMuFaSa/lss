@@ -1,0 +1,3 @@
+[submodule "src/vec"]
+	path = src/vec
+	url = https://github.com/sayMuFaSa/vec.git

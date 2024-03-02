@@ -2,6 +2,10 @@
 
 ## v0.1.0
 
+### Make vector library a separate project. - 2024-03-02
+- Now the vector library is a separate project.
+- Default compiler is changed to cc in configure script.
+
 ### Use string library. - 2024-03-02
 - Now a handmade string library is used for group and user names.
 - All calls to fprintf are replaced by perror where appropriate.
