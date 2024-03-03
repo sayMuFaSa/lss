@@ -21,13 +21,13 @@ static void print_per_line(const struct d_info* info);
 
 void print(const struct d_info* info, const char* p, const opt_t opt)
 {
+	if (opt & MULTIPLE)
+		printf("%s:\n", p);
+
 	if (opt & LONG) {
 		print_long(info, p);
 		return;
 	}
-
-	if (opt & MULTIPLE)
-		printf("%s:\n", p);
 
 	if (opt & ONEPL) {
 		print_per_line(info);
@@ -36,6 +36,7 @@ void print(const struct d_info* info, const char* p, const opt_t opt)
 
 	print_default(info);
 
+	
 }
 
 void print_default(const struct d_info* info)
@@ -43,7 +44,7 @@ void print_default(const struct d_info* info)
 	const struct dirent* data = info->child.data;
 	const size_t n = info->child.num;
 	size_t rows, cols, width;
-	
+
 	if (get_format(info, &rows, &cols, &width))
 		return;
 
@@ -54,7 +55,8 @@ void print_default(const struct d_info* info)
 			const size_t align = width - strlen(name);
 
 			if (pos >= n) {
-				putchar('\n'); return;
+				putchar('\n');
+				return;
 			}
 
 			printf("%s  ", name);
@@ -75,6 +77,7 @@ void print_per_line (const struct d_info* info)
 
 	for (size_t i = 0; i < n; i++)
 		puts(data[i].d_name);
+	
 }
 
 int get_format (const struct d_info* info, size_t* rows, size_t* cols, size_t* width)
@@ -115,6 +118,7 @@ struct Id {
 	str_t* name;
 };
 
+
 vec_declare(struct Id, Id)
 vec_define(struct Id, Id)
 
@@ -151,15 +155,6 @@ void print_long(const struct d_info* info, const char* p)
 			}
 		}
 
-		if (uname == NULL) {
-			const struct passwd* user = getpwuid(l_opt.st_uid);
-			struct Id udata = {.id = user->pw_uid};
-			udata.name = str_create(user->pw_name);
-			if (udata.name == NULL) return;
-			vec_push_Id(&known_users, &udata);
-			uname = user->pw_name;
-		}
-
 		for (size_t j = 0; j < known_groups.num; j++) {
 			const struct Id* group = vec_get_Id(&known_users, j);
 			if (l_opt.st_uid == group->id) {
@@ -168,6 +163,15 @@ void print_long(const struct d_info* info, const char* p)
 			}
 		}
 
+		if (uname == NULL) {
+			const struct passwd* user = getpwuid(l_opt.st_uid);
+			struct Id udata = {.id = user->pw_uid};
+			udata.name = str_create(user->pw_name);
+			if (udata.name == NULL) return;
+			vec_push_Id(&known_users, &udata);
+			uname = user->pw_name;
+		}
+		
 		if (gname == NULL) {
 			const struct group* group = getgrgid(l_opt.st_gid);
 			struct Id gdata = {.id = group->gr_gid};

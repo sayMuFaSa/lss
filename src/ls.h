@@ -15,7 +15,8 @@ typedef enum {
 	ALL      = 1u << 1,
 	LONG     = 1u << 2,
 	ONEPL    = 1u << 3,
-	MULTIPLE = 1u << 4
+	MULTIPLE = 1u << 4,
+	REVERSE  = 1u << 5
 } opt_t;
 
 vec_declare(struct dirent,dirent)

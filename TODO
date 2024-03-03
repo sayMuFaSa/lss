@@ -1,1 +1,1 @@
-Add an option for outputing in reverse order.
+Treat cli arguments as softlinks themselves when long option is specified and also add support for single file long output formatting.

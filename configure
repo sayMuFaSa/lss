@@ -5,7 +5,6 @@ PROJ_DIR=$(dirname $0)
 [ "$PROJ_DIR" = '.' ] || cp "${PROJ_DIR}/Makefile" .
 
 git submodule update --init
-git --git-dir=$PROJ_DIR/src/vec/.git checkout v1.0
 
 IF_MUSL=$(ldd --version 2>&1)
 case $IF_MUSL in

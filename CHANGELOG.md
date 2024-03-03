@@ -2,6 +2,12 @@
 
 ## v0.1.0
 
+### Add reverse outputing option. - 2024-03-03
+- Exploring git submodules. Unneeded commit switching deleted from configure script.
+- Docker container needed git for submodule initialization.
+- The reverse outputing option(-r) is added.
+- Cli arguments are also sorted now.
+
 ### Make vector library a separate project. - 2024-03-02
 - Now the vector library is a separate project.
 - Default compiler is changed to cc in configure script.

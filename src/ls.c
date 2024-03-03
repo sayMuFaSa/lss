@@ -11,14 +11,22 @@
 
 
 static int alpha(const void* a, const void* b);
+static int alpha_reverse(const void* a, const void* b);
+static int alpha_string(const void* a, const void* b);
+static int alpha_string_reverse(const void* a, const void* b);
 
 opt_t parse(const int argc, char* argv[])
 {
 	int arg; opt_t opt = DEF;
 
-	while ((arg = getopt(argc, argv, "laf1")) != -1) {
+
+	while ((arg = getopt(argc, argv, "lraf1")) != -1) {
 		
 		switch (arg) {
+			case 'r':
+				opt |= REVERSE;
+				break;
+
 			case 'l': 
 				opt |= LONG | ONEPL;
 				break;
@@ -37,7 +45,10 @@ opt_t parse(const int argc, char* argv[])
 
 	}
 
-	if (argc - optind > 1) opt |= MULTIPLE;
+	if (argc - optind > 1) {
+		qsort(argv + optind, argc - optind, sizeof(char*), (opt & REVERSE) ? alpha_string_reverse : alpha_string);
+		opt |= MULTIPLE;
+	}
 
 	if (!isatty(STDOUT_FILENO)) opt |= ONEPL;
 
@@ -62,7 +73,7 @@ int ls (struct d_info* info,  const char* target, const opt_t opt)
 	if (list(info, target, opt))
 		return -1;
 
-	vec_sort_dirent(&info->child, &alpha);
+	vec_sort_dirent(&info->child, (opt & REVERSE) ? alpha_reverse : alpha);
 
 	if (opt & LONG)
 		if (get_stats(info, target))
@@ -88,6 +99,28 @@ int alpha (const void* a, const void* b)
 	return 0;
 }
 
+int alpha_reverse (const void* a, const void* b)
+{
+	return -1 * alpha(a, b);
+}
+
+int alpha_string (const void* a, const void* b)
+{
+	const char* aname = a;
+	const char* bname = b;
+
+	for (size_t i = 0; aname[i] || bname[i]; i++) {
+		if (aname[i] > bname[i]) return 1;
+		if (aname[i] < bname[i]) return -1;
+	}
+
+	return 0;
+}
+
+int alpha_string_reverse (const void* a, const void* b)
+{
+	return -1 * alpha_string(a, b);
+}
 
 
 int get_stats(struct d_info* info, const char*  p)
